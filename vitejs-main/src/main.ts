@@ -1,19 +1,20 @@
-const url = 'https://dragonball-api.com/api/characters';
+import { fromFetch } from 'rxjs/fetch';
+import { switchMap, of } from 'rxjs';
 
-async function obtenerPersonajes() {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`);
+const data = fromFetch('https://dragonball-api.com/api/characters').pipe(
+  switchMap(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      return of({message: `Error ${ response.status }` });
     }
+  }),
+);
 
-    const data = await response.json();
-    const personajes = data.items;
-    mostrarPersonajes(personajes);
-  } catch (error) {
-    console.error('Ocurrió un error:', error);
-  }
-}
+data.subscribe(response => {
+  const personajes = response.items;
+  mostrarPersonajes(personajes);
+});
 
 function mostrarPersonajes(personajes: any[]) {
   const contenedor = document.getElementById('personajes');
@@ -21,17 +22,21 @@ function mostrarPersonajes(personajes: any[]) {
 
   contenedor.innerHTML = personajes
     .map(
-      (p: any) => `
-        <div class="personaje">
+      (p: any) => 
+        `<div class="personaje">
           <img src="${p.image}" alt="${p.name}" />
-          <h3>${p.name}</h3>
-        </div>
-      `
+          <h2>${p.name}</h2>
+          <p> ${p.race}-${p.gender}<p/>
+          <h3>Base KI</h3>
+          <p>${p.ki}<p/>
+          <h3>Total KI:</h3>
+          <p>${p.maxKi}<p/>
+          <h3>Afilliation:</h3>
+          <p>${p.affiliation}<p/>
+        </div>`
     )
     .join('');
 }
-
-obtenerPersonajes();
 
 
 
